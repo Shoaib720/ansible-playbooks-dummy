@@ -1,0 +1,38 @@
+---
+  - hosts: docker
+    name: Install Docker on Ubuntu 20.04
+    become: true
+    gather_facts: false
+    vars:
+      user: ubuntu
+    tasks:
+      - name: Update apt cache
+        apt:
+          update_cache: yes
+      - name: Install dependencies
+        apt:
+          name: "{{ item }}"
+          state: present
+        loop:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - software-properties-common
+      - name: Add Official Docker GPG Key
+        ansible.builtin.apt_key:
+          url: https://download.docker.com/linux/ubuntu/gpg
+          state: present
+      - name: Add docker repository to source list
+        ansible.builtin.apt_repository:
+          repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable
+          state: present
+          update_cache: true
+      - name: Install Docker-CE
+        apt:
+          name: docker-ce
+          state: latest
+      - name: Add user {{user}} to docker group
+        user:
+          name: "{{user}}"
+          groups: docker
+          append: yes
